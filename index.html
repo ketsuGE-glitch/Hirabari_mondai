@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>効果測定 練習ツール</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap');
+
+  :root {
+    --bg: #f5f4f0;
+    --surface: #ffffff;
+    --border: #e0ddd6;
+    --text: #1a1916;
+    --muted: #6b6860;
+    --blue: #1a4fa8;
+    --blue-light: #e8eef9;
+    --green: #0e6b3f;
+    --green-light: #e0f3ea;
+    --red: #a02020;
+    --red-light: #fceaea;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans JP', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0 0 3rem;
+  }
+
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  header h1 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  header .sub {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 1px;
+  }
+
+  .badge {
+    background: var(--blue-light);
+    color: var(--blue);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 99px;
+    margin-left: auto;
+  }
+
+  .tabs {
+    display: flex;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 1.5rem;
+    gap: 0;
+  }
+
+  .tab {
+    padding: 12px 18px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    border: none;
+    background: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: color 0.15s;
+    font-family: inherit;
+  }
+
+  .tab.active {
+    color: var(--blue);
+    border-bottom-color: var(--blue);
+  }
+
+  .main {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 1.5rem 1rem;
+  }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* カード */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    margin-bottom: 12px;
+  }
+
+  /* 設定エリア */
+  .setting-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    font-size: 14px;
+  }
+
+  .setting-row:last-child { margin-bottom: 0; }
+
+  .setting-label { color: var(--muted); font-size: 13px; }
+
+  select {
+    padding: 6px 10px;
+    font-size: 13px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    font-family: inherit;
+    cursor: pointer;
+  }
+
+  /* ボタン */
+  .btn {
+    padding: 8px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.15s;
+  }
+
+  .btn:hover { background: var(--bg); }
+
+  .btn.primary {
+    background: var(--blue);
+    border-color: var(--blue);
+    color: #fff;
+  }
+
+  .btn.primary:hover { background: #153d85; }
+
+  .btn.danger {
+    border-color: var(--red);
+    color: var(--red);
+  }
+
+  .btn-start {
+    width: 100%;
+    padding: 14px;
+    font-size: 16px;
+    font-weight: 700;
+    border-radius: var(--radius);
+    border: none;
+    background: var(--blue);
+    color: #fff;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.15s;
+    margin-top: 8px;
+  }
+
+  .btn-start:hover { background: #153d85; }
+
+  /* 進捗 */
+  .quiz-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .progress-text { font-size: 13px; color: var(--muted); }
+
+  .progress-bar-wrap {
+    height: 5px;
+    background: var(--border);
+    border-radius: 99px;
+    margin-bottom: 1.25rem;
+    overflow: hidden;
+  }
+
+  .progress-bar {
+    height: 5px;
+    background: var(--blue);
+    border-radius: 99px;
+    transition: width 0.3s;
+  }
+
+  /* 問題カード */
+  .question-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    font-size: 15px;
+    line-height: 1.8;
+  }
+
+  /* 回答ボタン */
+  .answer-btns {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .ans-btn {
+    flex: 1;
+    padding: 16px;
+    font-size: 22px;
+    font-weight: 700;
+    border-radius: var(--radius);
+    border: 2px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+
+  .ans-btn:hover:not(:disabled) {
+    background: var(--bg);
+    border-color: #bbb;
+  }
+
+  .ans-btn:disabled { cursor: default; }
+
+  .ans-btn.correct {
+    background: var(--green-light);
+    border-color: var(--green);
+    color: var(--green);
+  }
+
+  .ans-btn.wrong {
+    background: var(--red-light);
+    border-color: var(--red);
+    color: var(--red);
+  }
+
+  .ans-btn.reveal {
+    background: var(--green-light);
+    border-color: var(--green);
+    color: var(--green);
+  }
+
+  /* フィードバック */
+  .feedback {
+    display: none;
+    font-size: 14px;
+    padding: 12px 16px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 12px;
+    line-height: 1.7;
+  }
+
+  .feedback.correct {
+    display: block;
+    background: var(--green-light);
+    color: var(--green);
+    border: 1px solid #a0d4bc;
+  }
+
+  .feedback.wrong {
+    display: block;
+    background: var(--red-light);
+    color: var(--red);
+    border: 1px solid #f0b8b8;
+  }
+
+  .feedback .expl {
+    font-size: 13px;
+    margin-top: 6px;
+    opacity: 0.85;
+  }
+
+  .next-row {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  /* 結果 */
+  .result-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 2rem 1.5rem;
+    text-align: center;
+  }
+
+  .result-score {
+    font-size: 60px;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .result-label {
+    font-size: 14px;
+    color: var(--muted);
+    margin-bottom: 1.5rem;
+  }
+
+  .result-stats {
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+  }
+
+  .stat { font-size: 13px; color: var(--muted); }
+  .stat span { font-weight: 700; color: var(--text); }
+
+  .missed-list {
+    text-align: left;
+    border-top: 1px solid var(--border);
+    padding-top: 1rem;
+    margin-top: 1rem;
+    max-height: 350px;
+    overflow-y: auto;
+  }
+
+  .missed-title {
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    color: var(--red);
+  }
+
+  .missed-item {
+    font-size: 13px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    line-height: 1.6;
+  }
+
+  .missed-item strong {
+    display: block;
+    color: var(--text);
+    font-weight: 500;
+    margin-bottom: 2px;
+  }
+
+  .missed-item .answer-hint {
+    color: var(--green);
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .missed-item .expl-hint {
+    color: var(--muted);
+    font-size: 12px;
+    margin-top: 2px;
+  }
+
+  .result-btns {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  /* 問題一覧 */
+  .list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .q-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 500px;
+    overflow-y: auto;
+  }
+
+  .q-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+
+  .q-num {
+    font-size: 11px;
+    color: var(--muted);
+    min-width: 32px;
+    padding-top: 1px;
+  }
+
+  .q-text { flex: 1; line-height: 1.5; }
+
+  .q-badge {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 9px;
+    border-radius: 99px;
+    white-space: nowrap;
+  }
+
+  .bt { background: var(--green-light); color: var(--green); }
+  .bf { background: var(--red-light); color: var(--red); }
+
+  .q-del {
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 14px;
+    padding: 0 2px;
+    line-height: 1;
+  }
+
+  .q-del:hover { color: var(--red); }
+
+  /* 問題追加フォーム */
+  .form-row { margin-bottom: 14px; }
+
+  label {
+    display: block;
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 700;
+    margin-bottom: 5px;
+    letter-spacing: 0.05em;
+  }
+
+  textarea, input[type=text] {
+    width: 100%;
+    font-size: 14px;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    font-family: inherit;
+    resize: vertical;
+    line-height: 1.6;
+  }
+
+  textarea { min-height: 70px; }
+
+  .toggle-btns { display: flex; gap: 8px; }
+
+  .toggle-btn {
+    flex: 1;
+    padding: 10px;
+    font-size: 15px;
+    font-weight: 700;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--muted);
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+
+  .toggle-btn.sel-true {
+    background: var(--green-light);
+    border-color: var(--green);
+    color: var(--green);
+  }
+
+  .toggle-btn.sel-false {
+    background: var(--red-light);
+    border-color: var(--red);
+    color: var(--red);
+  }
+
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 6px;
+  }
+
+  /* 苦手バッジ */
+  .wrong-count {
+    display: inline-block;
+    background: var(--red-light);
+    color: var(--red);
+    font-size: 12px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 99px;
+  }
+
+  .empty {
+    text-align: center;
+    padding: 2.5rem 1rem;
+    color: var(--muted);
+    font-size: 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>🚗 効果測定 練習ツール</h1>
+    <div class="sub">自動車学校・仮免・本免対策</div>
+  </div>
+  <span class="badge" id="total-badge">222問</span>
+</header>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('quiz')">テスト</button>
+  <button class="tab" onclick="switchTab('list')">問題一覧</button>
+  <button class="tab" onclick="switchTab('add')">問題追加</button>
+</div>
+
+<div class="main">
+  <!-- テストパネル -->
+  <div class="panel active" id="panel-quiz">
+    <div id="quiz-area"></div>
+  </div>
+
+  <!-- 問題一覧パネル -->
+  <div class="panel" id="panel-list">
+    <div class="list-header">
+      <span id="q-count-label">全0問</span>
+      <button class="btn danger" onclick="clearAll()" style="font-size:12px;padding:4px 12px">全削除</button>
+    </div>
+    <div class="q-list" id="q-list"></div>
+  </div>
+
+  <!-- 問題追加パネル -->
+  <div class="panel" id="panel-add">
+    <div class="card">
+      <div class="form-row">
+        <label>問題文</label>
+        <textarea id="q-text" placeholder="例：交差点の手前30m以内は駐車禁止である。"></textarea>
+      </div>
+      <div class="form-row">
+        <label>正解</label>
+        <div class="toggle-btns">
+          <button class="toggle-btn" id="btn-true" onclick="setAns(true)">○ 正しい</button>
+          <button class="toggle-btn" id="btn-false" onclick="setAns(false)">× 誤り</button>
+        </div>
+      </div>
+      <div class="form-row">
+        <label>解説（省略可）</label>
+        <textarea id="q-expl" placeholder="解説を入力（任意）" style="min-height:50px"></textarea>
+      </div>
+      <div class="form-actions">
+        <button class="btn primary" onclick="addQ()">追加する</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const DATA = [
+["走行中にタイヤがパンクしたときは、ハンドルをしっかり握り車の方向をたて直し、ブレーキペダルを強く踏み続けて車をとめるとよい。",false,""],
+["この標示があるときは、前方に横断歩道・自転車横断帯があるので、加速したり追い越しを始めてはいけない。",true,""],
+["高速自動車国道において速度表示がない場合、大型自動二輪車は80km/h以上出すことはできない。",false,""],
+["道路が渋滞していたため、右側を通っていたが対向車がきたので、停車している車の前に割り込んだ。",false,""],
+["実線一本の路側帯で駐停車する時は、どのような場合でも白線に沿って停める。",false,""],
+["タイヤチェーンやスタッドレスタイヤを使用していれば、積雪時でも路面が乾いている時と同じ停止距離になる。",false,""],
+["坂道で、下りの車が上りの車に道をゆずるのは、上りの方が発進が難しいからである。",true,""],
+["この標識は、追い越しのため道路の右側部分にはみ出して通行してもよいことを表している。",false,""],
+["高速道路が渋滞していたので、止まってしまうと危険だと思い、路肩を走行して出口へ向かった。",false,""],
+["二輪車を安全に急停止させるには、前輪ブレーキを使わずに後輪ブレーキだけ強くかけるのがよい。",false,""],
+["中央線が白の実線であった時、その線をはみ出して前車を追い越した。",false,""],
+["故障した普通自動二輪車をけん引する大型自動二輪車は、高速自動車国道を通行することができる。",false,""],
+["このような警察官の灯火による手信号の場合、警察官に平行する交通については信号機の黄色の灯火と同じ意味である。",true,""],
+["自動車の積載物は、自動車の前後から少しでもはみ出してはいけない。",false,""],
+["黄色の灯火の信号が点滅していたら、一時停止をしてから徐行して進まなければならない。",false,""],
+["車両通行帯のあるトンネル内では、追い越しをしてもよい。",true,""],
+["昼間、高速道路において故障等で路側帯に駐車した場合は、後方の路上に停止表示器材を置き、さらに200m先が見えない場合は、合わせて非常点滅表示灯、駐車灯または尾灯をつけなければならない。",true,""],
+["ウィンドウォッシャーの日常点検では、液量の確認だけでなく噴射の向きや高さが適当かどうかも点検しなければならない。",true,""],
+["ブレーキペダルを踏み込んでふわふわした感じのするときは、ブレーキホースに空気が入っているか、ブレーキ液の液漏れのおそれがある。",true,""],
+["下り坂を走行するときは、N（ニュートラル）にしてフットブレーキを使うとよい。",false,""],
+["危険防止でやむを得ない場合を除いて、このマークのついた車両に割り込みや幅寄せをしてはならない。",true,""],
+["路側帯の中を通行している歩行者や自転車のそばを通るときは、徐行する必要はない。",false,""],
+["二輪車を運転する際、方向指示器・制動灯が故障してしまうと周囲に意思が伝わりづらくなるので、交通事故の原因になる。",true,""],
+["通学・通園バスは、路線バス等に含まれる。",true,""],
+["災害時に車を置いて避難するときは、車を道路の左側に寄せて止めエンジンを切り、盗難防止のためエンジンキーを抜き、ドアロックをして避難する。",false,"エンジンキーは付けたまま、ドアロックせずに避難する"],
+["駐車した場合、車の右側の道路上に2.5m以上の余地をあけなければならない。",false,"3m以上の余地が必要"],
+["ハイドロプレーニング現象とは、自動車等が水のたまった路面を高速走行すると、タイヤと路面の間に水が入り込み、自動車が水の膜の上を滑るようになり、ハンドルやブレーキがきかなくなる現象のことをいう。",true,""],
+["交通事故を起こした場合には、過失が大きい方が救急隊や警察に報告しなければならない。",false,"過失の大小にかかわらず、関係者全員が報告義務を負う"],
+["この標識がある道路は、歩行者専用道路であるから、車両（認められた車を除く）は通行することができない。",true,""],
+["暑さ対策で窓をあけて運転する際、窓枠に肘を置いたり手を出して運転するのは「いらだち防止」の為である。",false,"危険な行為であり禁止されている"],
+["この標識は、「前方に行き止まりがある」という意味である。",false,""],
+["路面電車を追い越すときは、左側から追い越す。",true,""],
+["駐車場・車庫などの自動車専用の出入り口から5メートル以内の場所は、駐車してはならない。",false,"3m以内が禁止"],
+["高速道路を走行中、故障などのためやむを得ない場合は、登坂車線に駐停車することができる。",false,"路肩・路側帯への駐停車が原則"],
+["追い越しをした後、元の車線に戻るのはできるだけ早い方がよい。",false,"十分な距離を確保してから戻る"],
+["普通免許で運転できる自動車は、乗車定員が10人以下、車両総重量が3.5t未満、最大積載量が2t未満である。",true,""],
+["短時間であれば、店先の道路上に商品を並べて売ることができる。",false,""],
+["大型自動二輪車で高速道路を走行する時、大型二輪免許を取得して1年を経過していれば2人乗りをすることができる。",false,"20歳以上かつ免許取得後3年以上が条件"],
+["けん引免許がなくても、普通免許で750kg以下のけん引されるための構造と装置のある車をけん引することができる。",true,""],
+["右の標識のある道路では、車と路面電車は時速50kmを超えて運転してはならない。",true,""],
+["オートマチック車の「クリープ現象」とは、ブレーキペダルをしっかり踏んでいないとアクセルペダルを踏まなくても自動車が動き出すことである。",true,""],
+["歩行者のそばを通るとき、歩行者との間隔が十分にあれば徐行する必要はない。",true,""],
+["災害対策基本法により、通行禁止区域等の区域でなくても、警察官の指示があれば車両を移動させなければならない。",true,""],
+["エアコン作動時は、エンジンの回転数が上がり、急発進する危険がある。",true,""],
+["二輪車の正しい運転姿勢は、足はステップバーに土踏まずを乗せ、グリップを軽く握り、足の裏を水平にし、つま先をまっすぐ前に向ける。",true,""],
+["高速道路上は駐停車禁止なので、危険防止のためやむを得ない場合でも一時停止してはならない。",false,"危険防止のためやむを得ない場合は一時停止できる"],
+["自動車が曲がりかどやカーブを通行するとき、内輪差によって後車輪が路肩にはみ出すことがある。",true,""],
+["標識、標示によって転回や横断が禁止されているところでは、同時に後退も禁止されている。",false,"後退は別に規制される"],
+["交通整理の行われていない道幅が同じくらいの道路では、路面電車と左方向の車の進行を妨げてはいけない。",true,""],
+["この標示のある通行帯は、指定された車・小型特殊自動車・原動機付自転車・軽車両以外は通行することはできない。",true,""],
+["横断歩道や自転車横断帯の手前で停止している車の側方を通過するときは、前方にでる前に必ず一時停止しなければならない。",true,""],
+["同一方向に二つの車両通行帯のあるところでは、速度の速い車が右側を速度の遅い車が左側の車両通行帯を通行する。",false,"追い越しや右折など特定の場合を除き、左側車線を走行する"],
+["大型免許を持っていれば、普通自動車を運転することができる。",true,""],
+["二輪車は、実際の速度より遅く見られたり、遠くにいるように見られたりするので、交差点を直進するときは対向右折車に注意する。",true,""],
+["自動車が一方通行の道路から右折する時は、あらかじめ道路の右端に寄り、交差点の中心の内側を徐行して通行しなければならない。",true,""],
+["5人乗りの自動車に、運転者以外に大人3人と5歳未満の子ども3人を乗せて運転することができる。",false,"12歳未満の子ども3人は大人2人分なので定員超過"],
+["放置車両確認標章は、その車の運転者やその車の管理について責任がある人は取り除くことができるので、運転する際には危険防止のため、その標章を取り除くとよい。",true,""],
+["パーキングメーターのある場所で駐車する場合、パーキングメーターを作動させなくても10分以内に戻れば駐車違反にならない。",false,"必ず作動させる必要がある"],
+["原動機付自転車では、地上から2メートル以下まで荷物を積むことができる。",true,""],
+["この標識のあるところでは、原動機付自転車や軽車両も進入することができない。",true,""],
+["車両総重量4,000kgの貨物自動車は、普通免許で運転することができる。",false,"普通免許は車両総重量3.5t未満"],
+["この標示があるところでは、指定に従って右折しなければならない。",true,""],
+["高速道路で後退するときは、他の車がいない場合に行う。",false,"高速道路での後退は原則禁止"],
+["原動機付自転車で二段階右折をする時は、直進してから向きを変えるので、合図は出さなくてもよい。",false,"合図は出さなければならない"],
+["消防用防火水そうや消火栓から5メートル以内の場所では、駐車することはできない。",true,""],
+["高速道路を走行中に電話がかかってきたので、路側帯に停車して通話した。",false,"高速道路の路側帯は停車禁止"],
+["夏に二輪車に乗るときは、肌の露出を多くした方が疲れにくく安全である。",false,"肌の露出は危険。長袖・長ズボン・手袋が基本"],
+["この標識があるとき、いったんカーブ前で速度を落とせば、加速して走行してもよい。",false,""],
+["歩行者がいない安全地帯のそばを通るときは、徐行しなければならない。",false,"歩行者がいない安全地帯では徐行不要"],
+["シートベルトは、体が動きやすいようにゆるく締めた方がよい。",false,"しっかりと正しく締める必要がある"],
+["この標識は、両耳の聴力が補聴器を用いても10メートルの距離で90デシベルの警音器の音が聞こえない程度の聴覚障がい者が、車の前と後ろの定められた位置につけなければならないものである。",true,""],
+["後部座席で大人が幼児を抱いて乗車する場合は、チャイルドシートを使用しなくてもよい。",false,"チャイルドシートの使用義務がある"],
+["大型特殊自動車の免許を持っていれば、大型自動車や普通自動車を運転することができる。",false,"大型特殊免許で運転できるのは大型特殊自動車のみ"],
+["普通自動車の積載物の制限は、自動車の幅の×1.1メートル以下であれば積載することができる。",true,""],
+["夕暮れ時に前照灯をつけると対向車の迷惑になるので、暗くなってからつけるようにする。",false,"日没前から点灯が必要"],
+["積載物の重量や大きさが規定の制限をこえる場合は、その荷物の見やすい箇所に0.3メートル平方以上の赤い布をつけなければならない。",true,""],
+["凸凹のある踏切では、転倒するおそれがあるので、自動二輪車は降りて押して歩くとよい。",true,""],
+["この標示は、「自転車専用通行帯」を示している。",false,""],
+["一般道路における自動二輪車の最高速度は60km/hである。",true,""],
+["この標識は、交通規制の「始まり」を意味している。",false,"「終わり」を意味する"],
+["二輪車でカーブを曲がるとき、ギアをニュートラルに入れてはいけない。",true,""],
+["道路の曲がりかどから5m以内の場所で5分をこえる荷物の積みおろしのために車をとめていたが、運転手がいてすぐに発進できる状況だったので駐車にはならない。",false,"曲がりかど5m以内での停止は場所的な制限に違反する"],
+["高速道路を走行中に車が故障したため、路肩に車をとめて、救援の車が来るまで車内で待機した。",false,"車外に出てガードレール外などの安全な場所に避難する"],
+["交通整理が行われていない、車両通行帯が3つ以上ある道路の場合、一般原動機付自転車は二段階右折しなければならない。",false,"交通整理が行われていない場合は二段階右折不要"],
+["濃い霧の道路やトンネルを走行する時は、右折方法と同じように方向指示器を操作する必要がある。",false,""],
+["交通が混雑している場合は、横断歩道上で停止してもよい。",false,"いかなる状況でも横断歩道上に停止してはいけない"],
+["この標識は、最低速度を表すものである。",true,""],
+["アンチロックブレーキシステムで急ブレーキをかける場合は、ブレーキを一気に強く踏み続けなければならない。",true,""],
+["左右の見通しが悪い踏切で、安全確認をするために停止線をこえて停止することは危険である。",true,""],
+["二輪車でカーブを曲がる時はハンドルを自分で切るのではなく、車体を傾けることにより自然に曲がると考えた方がよい。",true,""],
+["二輪車でカーブを走行するときは、スロットルで速度を加減し、クラッチを切って惰力で走行するとよい。",false,"クラッチを切らずエンジンブレーキを活用する"],
+["この標識のあるところでは、大型自動二輪車や普通自動二輪車の二人乗りをすることができる。",false,"二人乗り禁止を示す標識"],
+["踏切の直前で、自動車と一般原動機付自転車を追い越した。",false,"踏切前での追い越しは禁止"],
+["横断歩道前で、車が一時停止をしていたが、横断歩道を渡ろうとする歩行者の姿が見当たらなかったので、その車の横を徐行して進んだ。",false,"停止車両の前方に出る前に一時停止が必要"],
+["高速道路で合流するとき、気をつけなければならないのは前方の車より、むしろ本線車道を走っている後続車である。",true,""],
+["交差点で警察官が両腕を垂直に上げているとき、この警察官の身体の正面に平行する自動車には、黄色の灯火と同じ意味を示している。",true,""],
+["この標示板は、「左折可」である。",true,""],
+["道路に面した場所に出入りするために歩道を横切るときに、歩行者がいないことが明らかな場合には、徐行して通過することができる。",false,"歩行者がいなくても一時停止が必要"],
+["高速道路のトンネル入り口にある信号が赤を示していたら、トンネル内に絶対に入ってはいけない。",true,""],
+["右の標示は、安全地帯または路上障害物に接近しつつあることを示している。",true,""],
+["二輪車が故障したが、修理工場が近かったので、エンジンをかけたまま歩道を押して歩いた。",false,"エンジンをかけたまま歩道を押して歩くことは禁止"],
+["二輪車のチェーンは張りすぎているくらいがよい。",false,"適度な張りが必要。張りすぎは故障の原因"],
+["高速道路でスタンディングウェーブ現象を防ぐためにも、あらかじめタイヤの空気圧をやや低くしておくとよい。",false,"空気圧は規定値に合わせる。低すぎるとスタンディングウェーブが起きやすい"],
+["故障車をロープでけん引する場合は、故障車との間に10m以上の安全な間隔を保ち、ロープに30cm平方以上の黄色い布をつけなければならない。",false,"間隔は5m以内、白い布をつける"],
+["前車が信号待ちで停止中、その右側を通って前を横切ることは割り込みではないので禁止されていない。",false,"割り込みに該当し禁止"],
+["この標識は、「通学路に伴う横断歩道に注意」を表す標識である。",false,""],
+["妊娠している人もシートベルトを着用した方がよい。",true,""],
+["普通二輪免許を取得して3年以上経過し、かつ20歳以上の者が、大型二輪免許を取得してすぐに高速道路で二人乗りすることができる。",true,""],
+["二輪車を運転する際は、他の自動車から存在を見落とされやすいので、派手な服装や目立つ色のものを身に付けて、存在に気付いてもらうとよい。",true,""],
+["警察官が手信号をしている時、交差点以外で横断歩道や踏切がない場合の停止位置は、警察官の2m手前である。",false,"警察官の1m手前が停止位置"],
+["高速道路で故障などのためやむを得ない場合は、路肩や路側帯に駐停車することができる。",true,""],
+["二輪車でブレーキをかけるとき、エンジンブレーキをきかせるため順序よくシフトダウンさせるとよい。",true,""],
+["子どもが1人で歩いているときは、必ず一時停止し子どもが安全に通行できるようにしなければならない。",false,"徐行が原則。必ず一時停止ではない"],
+["長い下り坂で、自動車はフットブレーキを使いすぎると急にブレーキがきかなくなることがある。",true,"フェード現象・ベーパーロック現象"],
+["子どもが乗車する場合12歳未満の子どもは、3人を大人2人分と数える。",true,""],
+["この場合、車は矢印の方向に進むことができる。",false,""],
+["仮免許練習標識、高齢運転者標識、初心者標識、身体障がい者標識をつけている車両を追い越したり、その前方に無理に割り込んだりしてはならない。",false,"仮免許練習標識・初心者標識・身体障がい者標識が対象。高齢運転者標識は含まない"],
+["追い越しをするときは、右の方向指示器を出して約3秒後に最高速度の制限を超えて追い越しすることができる。",false,"追い越し中も速度制限を守る必要がある"],
+["20km/hまで速度を落とせば、徐行したことになる。",false,"徐行とはすぐに停止できる速度であり、一般に10km/h以下"],
+["地震などの災害が発生した場合、災害対策基本法により、緊急通行車両以外の車両の通行が禁止されることがあるが、一般車両ではあるが被災地支援のため食料などを積んでいれば緊急通行車両とみなすことができる。",false,"緊急通行車両の認定は行政機関が行う"],
+["白の実線一本で区切られた路側帯に進入して駐停車する時、車の左側に歩行者通行のため、0.75m以上の余地をあける必要がある。",true,""],
+["ABSを搭載した自動車で急停止する際は、システムを作動させるためブレーキを強めに数回に分けて踏むのがよい。",false,"ABSはブレーキを踏み続けることで機能する"],
+["ミニカーは普通自動車になるので、当然、高速道路を通行することができる。",false,"ミニカーは高速道路を通行できない"],
+["下り坂でブレーキがきかなくなったときは、すばやくシフトダウンして（低速ギアに入れ）ハンドブレーキで止めるようにするとよい。",true,""],
+["二輪車に乗るときは、手首を下げて、ハンドルを前に押すような気持ちでグリップを軽く持ち、ひじはスプリングの役目を持たせるため、わずかに曲げるのがよい。",true,""],
+["この標識は、普通乗用自動車のみが通行することができる。",false,""],
+["路肩が広ければ、特定の村の区域内でなければ、夜間8時間以上駐車してもよい。",false,"特定の村の区域以外では夜間8時間以上の駐車は禁止"],
+["駐車禁止場所に、人を待つため車を20分間停めたが、これは人の乗り降りのための停車なので駐車にならない。",false,"継続的に停めるのは駐車に該当する"],
+["積載物の重量は、自動車検査証に記載されている重量の1.1倍まで積載することができる。",false,"最大積載量を超えた積載は禁止"],
+["道幅が同じような交差点で右折する際に、対向車線の車が左折の合図を出していても、自分が先に交差点に入っていたので、先に右折した。",false,"対向車が左折でも右折車は相手の進行を妨げてはならない"],
+["車両通行を禁止するものは、規制標識である。",true,""],
+["普通仮免許を持っていれば、練習のため一般原動機付自転車を運転することができる。",false,"仮免許は普通自動車の練習用。原付は別の免許が必要"],
+["踏切内で、自動車が動かなくなってしまい発煙筒を使用するときは、列車が見えてから点火するのがよい。",false,"列車が来る前に早めに点火して知らせる"],
+["高速道路において、Bから進入する車は、Aを進行している車の通行を妨げてはいけない。",true,""],
+["AT車は運転の基本を正しく理解さえすれば、MT車に比べてより危険が少ないので安易な気持ちで運転することができる。",false,"AT車でも安易な運転は危険"],
+["自転車横断帯の前後5メートル以内は、駐車してはいけないが停車はしてもよい。",false,"駐停車ともに禁止"],
+["交通が混雑していたので、バスが走行していない「バス専用通行帯」を走行した。",false,"バスの運行に関係なく一般車は通行禁止"],
+["これは、解除を示す標識である。",true,""],
+["大型自動二輪車の高速自動車国道における最高速度は100km/hであるが、普通自動二輪車の最高速度は80km/hである。",false,"どちらも100km/h"],
+["大型自動車の免許を持っていれば、大型特殊自動車を運転することができる。",false,"大型特殊自動車は専用の免許が必要"],
+["自家用の車両総重量8t未満の貨物自動車の定期点検の時期は、6ヶ月ごとに実施しなければならない。",true,""],
+["交通法規を守っていれば、思いやりの心は必要ではない。",false,"法規を守るだけでなく思いやりも必要"],
+["二輪車で高速走行するときは、障害物や落下物を見落とさないためにも視線は遠くへ向けておくのがよい。",true,""],
+["大型自動二輪車や普通自動二輪車は、車両通行帯が3つ以上のところでは、二段階の方法により右折をしなければならない。",false,"原動機付自転車が対象。二輪車は通常の右折"],
+["12歳未満の子どもには、チャイルドシートを使用しなければならない。",false,"6歳未満の子どもが対象"],
+["歩行者のいる安全地帯のそばを通るときは、歩行者がいなくなるまで後方で一時停止しなければならない。",false,"徐行すればよい"],
+["一般道路におけるミニカーの法定最高速度は40km/hである。",false,"ミニカーの最高速度は60km/h"],
+["この標識は、横断歩道であることを示している。",true,""],
+["前に自転車がいる場合、予測不可能な動きをすることがあるので、いつでもハンドルで避けられるように構えておく。",false,"ブレーキで安全に減速できるよう構えるのが正しい"],
+["故障車をロープやクレーンなどでけん引するときは、けん引免許は必要ない。",true,""],
+["これらの手信号は、正面から見たとき二つとも同じ意味である。",true,""],
+["霧の中で走行するときは、速度を落とし前照灯をつけ、必要なときは警音器を鳴らすことができる。",true,""],
+["踏切を通行する際、雨などで線路が濡れているときは、より速度を落として通過するとよい。",true,""],
+["横断歩道に歩行者がいない場合は、横断歩道の手前30m以内の場所であっても、追い越しをすることができる。",false,"横断歩道の手前30m以内での追い越しは禁止"],
+["小型特殊免許で一般原動機付自転車を運転することができる。",false,"小型特殊免許では原付は運転できない"],
+["検査標章の数字は、次の検査の時期が記載されている。",true,""],
+["この標識のあるところでは、原動機付自転車や軽車両は通行することができる。",false,""],
+["安全地帯がなく、乗り降りする人がいない場合、停止中の路面電車との間に1.5mの間隔があれば徐行して通過することができる。",true,""],
+["上り坂で発進する時は、四輪車の場合はハンドブレーキを、二輪車の場合は後輪ブレーキを使用するとよい。",true,""],
+["信号機のある踏切を通過するときでも、一時停止をして安全を確かめなければならない。",false,"信号機のある踏切では信号に従えばよく、一時停止不要"],
+["進路変更する時は、合図を出してから安全確認するとよい。",false,"安全確認してから合図を出す"],
+["荷物の積み降ろしをする際、「配達中」の文字を掲げていれば、時間に関係なく停車とみなされる。",false,"「配達中」表示に法的効力はない"],
+["信号が黄色の灯火になったとき、安全に停止できなかったのでそのまま進んだ。",true,""],
+["オートマチック車で、坂道で駐車するときは、上りでも下りでも「P」に入れて駐車しなければならない。",true,""],
+["実線一本の路側帯のあるところで駐停車するときは、どのような場合でも車の左側に0.75mの余地を空けなければならない。",false,"路側帯内に入って駐停車することも可能な場合がある"],
+["10人乗りの乗用車を普通免許で運転した。",true,"乗車定員10人以下は普通免許で運転可能"],
+["安全地帯とは、右図のことである。",false,""],
+["放置違反金を納付の期限までに納付せず、公安委員会から督促を受けた自動車の使用者は、その放置違反金、延滞金及び手数料を納付したことなどを証明する書面を提示すれば、新たに自動車検査証を受けることができる。",true,""],
+["一方通行の道路では、追い越しをすることは禁止されている。",false,"一方通行の道路でも追い越しは可能"],
+["白いつえを持った人が横断歩道を渡ろうとしていたので、一時停止して道をゆずった。",true,""],
+["自動車の保管場所は、自動車の使用の本拠の位置から4キロメートル以内の道路以外の場所に確保しなければならない。",false,"2km以内"],
+["右左折をする際に合図を出すのは、その3秒前である。",false,"右左折の30m手前で合図"],
+["対向車と正面衝突しそうになった時、たとえ道路外に危険がなくても道路外へ出てはいけない。",false,"道路外に危険がなければ道路外に出て回避してよい"],
+["交差点を右折する時は、交差点の中心の外側を徐行するのがよい。",false,"中心の内側を徐行"],
+["この標識は、指定方向外進行禁止を示す標識である。",true,""],
+["進路変更をしようと方向指示器を出したが、後方から車が接近してきたため方向指示器を消して進路変更するのをやめた。",true,""],
+["けん引するための構造と装置のある自動車で、けん引されるための構造と装置のある車をけん引しているときは、高速自動車国道を走行することができる。",true,""],
+["バスの停留所から10m以内では、バスの運行時間中でなければ駐停車することができる。",true,""],
+["二輪車で、ブレーキをかけたときの重心は前輪にかかる。",true,""],
+["長時間にわたって運転するときは、2時間に1回は休息をとるようにしなければならない。",true,""],
+["二輪車の後輪がロックした時は、前輪がロックした時よりバランスを崩しやすくなる。",false,"前輪がロックした時の方がバランスを崩しやすい"],
+["二輪車でぬかるみにはまって抜け出せなくなった時は、スロットルを回して一気に抜け出した方がよい。",false,"急にスロットルを回すとスリップの原因になる"],
+["見通しの悪い所でやむを得ず後退するときは、同乗者に確認をしてもらいながら行なうとよい。",true,""],
+["MT車で踏切を通過する際は、低速ギアのまま中央寄りを一気に通過する。",true,""],
+["普通免許で、小型特殊自動車、普通自動二輪車、一般原動機付自転車を運転することができる。",false,"普通免許では普通自動二輪車は運転できない"],
+["この標示は、この先に交差点があるという意味である。",false,""],
+["災害時に、親戚の家に物資を届けるためなら警察官の許可がなくても通行禁止区域内で、一般車両が通ることができる。",false,"警察官の許可または指示が必要"],
+["停車している通学・通園バスの側方を通過するときは、徐行しなければならない。",true,""],
+["二輪車を運転するときに、目立つ色の服装は周りの運転者の気が散ってしまうので、黒色の服を着た方がよい。",false,"目立つ色の服装が安全につながる"],
+["高速自動車国道における、大型貨物自動車・中型貨物自動車・普通貨物自動車の最高速度は80km/hである。",false,"大型・中型貨物は80km/h、普通貨物は100km/h"],
+["高速自動車国道において、故障車をロープでけん引している自動車は通行することができる。",false,"高速道路でのロープけん引は禁止"],
+["バス停の標示板から10メートル以内の場所は、バスの運行時間中に限り駐停車禁止である。",true,""],
+["この標識は「その他の危険」を示すもので、運転者は運転上注意を要する箇所があることを念頭において、注意深く運転した方がよい。",true,""],
+["危険回避や、やむを得ない場合以外、急ブレーキを踏んではならない。",true,""],
+["歩道や路側帯のない道路で駐停車するときは、道路の左端に沿って止めなければならない。",true,""],
+["横断歩道のないところで歩行者が横断している時は、自動車はその進行を妨げてはならない。",true,""],
+["夜間、自分の車と対向車のライトで道路の中央付近にいる歩行者が見えなくなることがある、これを蒸発現象という。",true,""],
+["黄色の中央線は、規制標示であり、特定の交通方法を禁止・指定するものである。",true,""],
+["大型自動二輪免許か普通自動二輪免許を受けていて、年齢が20歳以上で経験が3年以上の者であれば、高速道路を二人乗りすることができる。",true,""],
+["二輪車のエンジンをかけて押して歩くときは、歩行者として扱われるので、歩道や路側帯を通行してもよい。",false,"エンジンをかけたまま押して歩くのは歩行者扱いにならない"],
+["白いつえを持った人が歩いている場合、一時停止か徐行をした。",true,""],
+["急な下り坂で、フットブレーキを使いすぎるとブレーキがきかなくなるおそれがあるので、できるだけエンジンブレーキを使うようにする。",true,""],
+["高速道路で減速車線に入るときは、あらかじめ本線車道で十分速度を落としてから、減速車線に進入しなければならない。",false,"減速車線に入ってから速度を落とす"],
+["全ての自動車は、6ヶ月ごとに定期点検を行わなければならない。",false,"車種によって点検時期が異なる"],
+["右の信号の場合、車や路面電車は他の交通に注意して進むことができる。",false,""],
+["駐車禁止場所であっても、警察署長の許可を受ければ駐車することができる。",true,""],
+["四輪車に乗った後、ドアを閉める際に半ドアにならないように、途中で止めずに力強く一気に閉めるようにするとよい。",false,"無理に力強く閉めると車体を傷める。確実に閉まったか確認する"],
+["この標識がある場所では、駐車はしてはならないが、5分以内の荷物の積みおろしのための停止はしてもよい。",true,""],
+["故障車をけん引することができるのは、JAFだけである。",false,"けん引免許（または750kg以下なら普通免許）があれば誰でも可能"],
+["大型特殊自動車の免許をうけていれば、大型自動車や普通自動車の運転もできる。",false,"大型特殊免許で運転できるのは大型特殊自動車のみ"],
+["危険防止や道路工事などの場合は、軌道敷内を通行することができる。",true,""],
+["運転中、故障している車を見つけたので、手助けしようとしたが助けると時間がかかり他の交通の迷惑となるので、そのまま通り過ぎた。",false,"可能な範囲で助けるべき"],
+["高速道路を走行する前に、停止表示器材が備え付けられているか点検をしなければならないが、一般道路を走行する際は、停止表示器材を備え付ける必要はない。",false,"一般道路でも停止表示器材の備え付けは必要"],
+["横断歩道のない道路では、歩行者より車の方が優先である。",false,"どこでも歩行者の安全を守る義務がある"],
+["AT二輪車の大半で採用されている無段変速装置は、エンジンブレーキがききにくい。",true,""],
+["二輪車は、風の影響を受けやすいので、姿勢を低く前傾姿勢を保持して運転するのがよい。",false,"体をリラックスさせた正しい姿勢で運転する"],
+["この標示がある方と交差する前方の道路が優先道路である。",true,""],
+["信号機と警察官の出す指示が異なったが、信号機の信号に従った。",false,"警察官の指示が優先"],
+["大型自動二輪車や普通自動二輪車は、後部に運転者用以外の座席がなければ二人乗りをすることができない。",true,""],
+["路側帯の幅が0.75m以下の場合は、車道の左端に沿って駐停車する。",true,""],
+["この標識のある場所では、70歳以上の高齢運転者であれば誰でも駐車することができる。",false,""],
+["交通量の多いところでは、車の左側から乗り降りするとよい。",true,""],
+["バスやタクシーを回送目的で運転する場合は、第一種運転免許で運転することができる。",true,""],
+["中型免許では、車両総重量11トン未満、最大積載量6.5トン未満、乗車定員29人以下の自動車を運転することができる。",true,""],
+["二輪車で二人乗りするときは、運転者と密着して乗るとよい。",false,"適切な間隔を保ち、運転者の動きを妨げないようにする"],
+["トンネル内を走行中に、ラジオで地震の警戒宣言が発令されたのを知ったので、すみやかにトンネル内から出て車を待避所へ移動させた。",true,""],
+["高速道路での車間距離は、路面が乾燥していてタイヤが新しい場合は、走行している速度の数字をメートルに置き替えた距離（100km/hでは100m、80km/hでは80m）以上の車間距離が必要である。",true,""],
+["普通貨物自動車の一般道路における最高速度（標識等なし）は、50km/hである。",false,"普通貨物自動車の最高速度は60km/h"],
+["この標識がある道路で、道路の右側部分にはみ出さないで原動機付自転車を追い越した。",true,""],
+["夜間対向車のライトを直接みると、げん惑されて目が見えなくなるので、視線をやや右前方に移した。",false,"視線はやや左前方に移す"],
+["エンジンを切った二輪車にまたがって坂を下るときは、歩道や路側帯を通行することができる。",false,"エンジンを切っていても車両扱いなので歩道通行は不可"],
+["各都道府県公安委員会が指定した区域や特定の村の区域以外の場所では、幅員が広い道路でも夜間8時間以上駐車することができない。",true,""],
+["原動機付自転車も自動車賠償責任保険に加入しなければならない。",true,""],
+["この標示のあるところでは、駐車のみが禁止されている。",true,""],
+["高速道路を走行中にやむを得ず急ブレーキをかける場合は、クラッチペダルを踏んだ状態でブレーキを数回に分けて踏むのがよい。",false,"クラッチは踏まずブレーキを強く踏み続ける"],
+["「警笛鳴らせ」の標識があるところでは、昼も夜も鳴らさなければならない。",true,""],
+["後輪が右に横すべりをしたら、ブレーキペダルは踏まずハンドルを右に回して車の向きを立て直すとよい。",true,""],
+["トンネル内では暗順応がおこるため、トンネルに入る前には、あらかじめ速度を落として走行しなければならない。",true,""],
+["警察官が両腕を水平に上げているときは、その身体の正面に対面する交通については、信号機の青色の灯火と同じ意味である。",false,"黄色の灯火と同じ意味"],
+["普通乗用車で故障車をロープでけん引する時は、故障車との間隔を5メートル以内にし、一辺が30センチメートル平方以上の白い布をロープに結びつけなければならない。",true,""],
+["白の破線から黄色の実線に進路を変えることができる。",true,""],
+["赤色の灯火の点滅信号の場合、車や路面電車は一時停止しなければならない。",true,""],
+["一方通行の道路で緊急自動車に道を譲るとき、かえって緊急自動車の妨げとなるような時でも左に寄り進路を譲らなければならない。",false,"妨げになる場合は右に寄ることもある"],
+["雨が降って路面が濡れているときは制動距離が長くなるが、重い荷物を積んでいるときは制動距離は短くなる。",false,"重い荷物でも制動距離は長くなる"],
+["路線バス等優先通行帯を通行中に通園バスが近づいてきたが、路線バスではないのでそのまま優先通行帯を通行した。",false,"通学・通園バスも路線バス等に含まれる"],
+["睡眠作用があるかぜ薬や頭痛薬など、眠気をもよおすおそれのある薬を飲んだときは、運転をしない方がよい。",true,""],
+["バス専用と表示されている道路は、原動機付自転車や小型特殊自動車は通行することができる。",true,""],
+["このような積載の方法は、違反にはならない。",false,""],
+["AT二輪車とMT二輪車は操作にあまり違いがないため、気軽な気持ちで運転することができる。",false,"操作が異なり、気軽な気持ちは危険"],
+["運転中に携帯電話を通話のために使用するのは禁止されているが、ハンズフリーであれば運転中でも使用することができる。",true,""],
+["駐停車禁止の場所でなくても、警察官から指示があった場合は、移動しなくてはならない。",true,""],
+["AT車で後退をする時は、ブレーキペダルをしっかりと踏み、レバーをRにし、サイドブレーキを解除し、ブレーキから足をゆっくりと離してからアクセルを踏む。",true,""],
+["横断歩道を渡っている自転車を巻き込みそうになったため、警音器を鳴らし自転車が止まったのでそのまま通りすぎた。",false,"横断中の自転車の通行を妨げてはならない"],
+["交通事故を起こしたとき、自分に責任がなく相手に過失があれば、警察に届け出をしなくてもよい。",false,"関係者全員に報告義務がある"],
+["これらの標識は、車の前と後ろの地上0.4メートル以上、1.2メートル以下の見やすい位置につけなければならない。",true,""],
+["二輪車でカーブを走行するときは、カーブに入ってから減速し車体を傾けると危険なので、ハンドルを切って曲がるようにする。",false,"カーブ前に減速し、車体を傾けて曲がる"],
+["高速道路の料金所付近は事故が多いので、速度を落としまわりの状況をしっかり確認しながら進むようにする。",true,""],
+["昼間、50m先が見えないようなトンネルの中で車が故障し駐車する場合、わかりやすいように非常点滅表示灯と後退灯をつけるとよい。",false,"後退灯ではなく駐車灯または尾灯をつける"],
+["大型車の後ろを走行中、眠気を感じた場合、前の大型車のブレーキランプを見続けて走行するとよい。",false,"眠気を感じたら安全な場所に停車して休憩する"],
+["この標識は、「すべりやすいので注意が必要である」という意味である。",false,""],
+["駐車禁止場所でないところで同じ場所に引き続き12時間以上（夜間は8時間以上）駐車してはならない。",true,""],
+["二輪車のブレーキには、前後輪のブレーキの他にエンジンブレーキがある。",true,""],
+["「警笛鳴らせ」の標識がある場所や、「警笛区間」の標識がある区間内で、左右の見通しがきかない交差点、見通しのきかない道路の曲がりかど、見通しのきかない上り坂の頂上以外の場所では、危険を避けるためやむを得ない場合でも警音器を鳴らしてはいけない。",false,"危険を避けるためやむを得ない場合は警音器を鳴らせる"],
+["前照灯が上向きの自動車とすれ違う場合、自らの車の前照灯を上向きにすることによって対向車に前照灯が上向きになっていることを知らせる。",false,"下向きに切り替え、視線をやや左前方に向ける"],
+["ドラムブレーキに水が入り、ブレーキのききが悪くなったら、低速でブレーキを数回かけて乾すとよい。",true,""],
+["踏切内で、車が動かなくなってもセルモーターまで使用しなくてもよい。",false,"セルモーターを使ってでも移動させる"],
+["この標示は、車が停止することができない部分であることを示している。",true,""],
+["二輪車を選ぶときは、二輪車にまたがったとき片足のつま先が地面に届く程度のものを選ぶとよい。",false,"両足のつま先が地面に届く程度のものを選ぶ"],
+["全ての自動車は、1日に1回運行前に必ず日常点検を行わなければならない。",false,"日常点検の実施方法・頻度は車種や使用状況による"],
+["踏切内を通過中、遮断機が降りてしまい踏切内で取り残されたときは、車で遮断機を押して出るとよい。",true,""]
+];
+
+let questions = DATA.map((d,i)=>({id:i,text:d[0],answer:d[1],explanation:d[2]}));
+let selectedAns = null;
+let wrongIds = new Set();
+let quizPool = [], quizIndex = 0, quizAnswers = [], answered = false;
+
+document.getElementById('total-badge').textContent = questions.length + '問';
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',['quiz','list','add'][i]===tab));
+  document.querySelectorAll('.panel').forEach((p,i)=>p.classList.toggle('active',['quiz','list','add'][i]===tab));
+  if(tab==='list') renderList();
+  if(tab==='quiz') renderStart();
+}
+
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function renderStart() {
+  const n = questions.length;
+  document.getElementById('quiz-area').innerHTML = `
+    <div class="card">
+      <div class="setting-row">
+        <span class="setting-label">出題範囲</span>
+        <select id="sel-mode" onchange="updateCount()">
+          <option value="all">全問（${n}問）</option>
+          <option value="10">ランダム10問</option>
+          <option value="20">ランダム20問</option>
+          <option value="50">ランダム50問</option>
+          <option value="wrong">苦手問題のみ</option>
+        </select>
+      </div>
+      <div class="setting-row">
+        <span class="setting-label" id="count-info">計${n}問出題されます</span>
+        ${wrongIds.size>0?`<span class="wrong-count">苦手 ${wrongIds.size}問</span>`:''}
+      </div>
+    </div>
+    <button class="btn-start" onclick="startQuiz()">テスト開始 →</button>
+  `;
+}
+
+function updateCount() {
+  const v = document.getElementById('sel-mode').value;
+  const n = questions.length;
+  let txt;
+  if(v==='all') txt=`計${n}問出題されます`;
+  else if(v==='wrong') txt=`計${wrongIds.size}問（苦手のみ）`;
+  else txt=`ランダム${Math.min(parseInt(v),n)}問出題されます`;
+  document.getElementById('count-info').textContent = txt;
+}
+
+function startQuiz() {
+  const sel = document.getElementById('sel-mode');
+  const v = sel ? sel.value : 'all';
+  let pool = [...questions];
+  if(v==='wrong') {
+    pool = pool.filter(q=>wrongIds.has(q.id));
+    if(!pool.length){alert('苦手問題がまだありません。全問モードでテストしてみましょう！');return;}
+  } else if(v!=='all') {
+    const n2 = parseInt(v);
+    pool = pool.sort(()=>Math.random()-0.5).slice(0,Math.min(n2,pool.length));
+  }
+  quizPool=pool; quizIndex=0; quizAnswers=[]; showQ();
+}
+
+function showQ() {
+  answered = false;
+  const q = quizPool[quizIndex];
+  const tot = quizPool.length;
+  const pct = Math.round(quizIndex/tot*100);
+  document.getElementById('quiz-area').innerHTML = `
+    <div class="quiz-header">
+      <span class="progress-text">問題 ${quizIndex+1} / ${tot}</span>
+      <button class="btn" onclick="renderStart()" style="font-size:12px;padding:5px 12px">← 設定</button>
+    </div>
+    <div class="progress-bar-wrap"><div class="progress-bar" style="width:${pct}%"></div></div>
+    <div class="question-card">${esc(q.text)}</div>
+    <div class="answer-btns">
+      <button class="ans-btn" id="ans-t" onclick="doAns(true)">○</button>
+      <button class="ans-btn" id="ans-f" onclick="doAns(false)">×</button>
+    </div>
+    <div class="feedback" id="fb"></div>
+    <div class="next-row">
+      <button class="btn primary" id="next-btn" onclick="nextQ()" style="display:none">
+        ${quizIndex===quizPool.length-1?'結果を見る ✓':'次の問題 →'}
+      </button>
+    </div>
+  `;
+}
+
+function doAns(val) {
+  if(answered) return;
+  answered = true;
+  const q = quizPool[quizIndex];
+  const ok = val===q.answer;
+  quizAnswers.push({q,val,ok});
+  if(!ok) wrongIds.add(q.id); else wrongIds.delete(q.id);
+  const tBtn=document.getElementById('ans-t');
+  const fBtn=document.getElementById('ans-f');
+  tBtn.disabled=fBtn.disabled=true;
+  (val?tBtn:fBtn).classList.add(ok?'correct':'wrong');
+  if(!ok)(q.answer?tBtn:fBtn).classList.add('reveal');
+  const fb=document.getElementById('fb');
+  fb.className='feedback '+(ok?'correct':'wrong');
+  fb.innerHTML=(ok?'✓ 正解！':'✗ 不正解')+(q.explanation?`<div class="expl">${esc(q.explanation)}</div>`:'');
+  document.getElementById('next-btn').style.display='block';
+}
+
+function nextQ() {
+  quizIndex++;
+  if(quizIndex>=quizPool.length) showResult();
+  else showQ();
+}
+
+function showResult() {
+  const tot=quizPool.length;
+  const ok=quizAnswers.filter(a=>a.ok).length;
+  const pct=Math.round(ok/tot*100);
+  const missed=quizAnswers.filter(a=>!a.ok);
+  const color=pct>=90?'#0e6b3f':pct>=70?'#1a4fa8':'#a02020';
+  document.getElementById('quiz-area').innerHTML=`
+    <div class="result-card">
+      <div class="result-score" style="color:${color}">${pct}<span style="font-size:28px">点</span></div>
+      <div class="result-label">${tot}問中 ${ok}問正解</div>
+      <div class="result-stats">
+        <div class="stat">正解 <span style="color:#0e6b3f">${ok}問</span></div>
+        <div class="stat">不正解 <span style="color:#a02020">${tot-ok}問</span></div>
+        <div class="stat">正答率 <span>${pct}%</span></div>
+      </div>
+      ${missed.length?`
+        <div class="missed-list">
+          <div class="missed-title">間違えた問題（${missed.length}問）</div>
+          ${missed.map(a=>`
+            <div class="missed-item">
+              <strong>${esc(a.q.text)}</strong>
+              <span class="answer-hint">正解：${a.q.answer?'○（正しい）':'×（誤り）'}</span>
+              ${a.q.explanation?`<div class="expl-hint">${esc(a.q.explanation)}</div>`:''}
+            </div>
+          `).join('')}
+        </div>
+      `:'<div style="color:#0e6b3f;font-size:15px;margin-top:8px">🎉 全問正解！</div>'}
+      <div class="result-btns">
+        <button class="btn" onclick="renderStart()">設定に戻る</button>
+        <button class="btn primary" onclick="startQuiz()">もう一度挑戦</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderList() {
+  document.getElementById('q-count-label').textContent=`全${questions.length}問`;
+  document.getElementById('q-list').innerHTML=questions.length?questions.map((q,i)=>`
+    <div class="q-item">
+      <span class="q-num">Q${i+1}</span>
+      <span class="q-text">${esc(q.text)}</span>
+      <span class="q-badge ${q.answer?'bt':'bf'}">${q.answer?'○':'×'}</span>
+      <button class="q-del" onclick="delQ(${q.id})" title="削除">✕</button>
+    </div>
+  `).join(''):`<div class="empty">問題がありません</div>`;
+}
+
+function delQ(id) {
+  if(!confirm('この問題を削除しますか？')) return;
+  questions=questions.filter(q=>q.id!==id);
+  document.getElementById('total-badge').textContent=questions.length+'問';
+  renderList();
+}
+
+function clearAll() {
+  if(!confirm(`全${questions.length}問を削除しますか？`)) return;
+  questions=[]; wrongIds=new Set();
+  document.getElementById('total-badge').textContent='0問';
+  renderList();
+}
+
+function setAns(v) {
+  selectedAns=v;
+  document.getElementById('btn-true').className='toggle-btn'+(v===true?' sel-true':'');
+  document.getElementById('btn-false').className='toggle-btn'+(v===false?' sel-false':'');
+}
+
+function addQ() {
+  const text=document.getElementById('q-text').value.trim();
+  const expl=document.getElementById('q-expl').value.trim();
+  if(!text){alert('問題文を入力してください。');return;}
+  if(selectedAns===null){alert('正解（○か×）を選んでください。');return;}
+  const newId=questions.length?Math.max(...questions.map(q=>q.id))+1:0;
+  questions.push({id:newId,text,answer:selectedAns,explanation:expl});
+  selectedAns=null;
+  document.getElementById('q-text').value='';
+  document.getElementById('q-expl').value='';
+  document.getElementById('btn-true').className='toggle-btn';
+  document.getElementById('btn-false').className='toggle-btn';
+  document.getElementById('total-badge').textContent=questions.length+'問';
+  alert(`追加しました！（現在${questions.length}問）`);
+}
+
+renderStart();
+</script>
+</body>
+</html>
